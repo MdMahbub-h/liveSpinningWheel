@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel - Spin and Win Configuration</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+      .container {
+        background-color: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 800px;
+        min-height: 500px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+      }
+      label {
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input,
+      textarea {
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+      }
+      textarea {
+        resize: vertical;
+        min-height: 200px;
+      }
+      button {
+        padding: 10px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      .error {
+        color: red;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+      .prize-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .prize-item input {
+        margin-bottom: 0;
+        margin-right: 10px;
+      }
+      .prize-name {
+        width: 300px;
+      }
+      .prize-item .remove-prize {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 12px 15px;
+        font-size: 14px;
+      }
+      .prize-item .remove-prize:hover {
+        background-color: #d32f2f;
+      }
+      #addPrize {
+        margin-bottom: 15px;
+        background-color: #2196f3;
+      }
+      #addPrize:hover {
+        background-color: #1976d2;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Spin and Win Configuration</h1>
+      <form id="configForm">
+        <label for="gameName">Game Name:</label>
+        <input type="text" id="gameName" name="gameName" required />
+
+        <label for="sliceNumber">Slice Number:</label>
+        <input
+          type="number"
+          id="sliceNumber"
+          name="sliceNumber"
+          min="1"
+          required
+        />
+
+        <label for="spinDuration">Spin Duration (seconds):</label>
+        <input
+          type="number"
+          id="spinDuration"
+          name="spinDuration"
+          min="1"
+          step="0.1"
+          required
+        />
+
+        <label for="wheelPrizes">Wheel Prizes:</label>
+        <div id="prizesContainer">
+          <div class="prize-item">
+            <input
+              type="text"
+              class="prize-name"
+              placeholder="Prize name (e.g., 50$)"
+              required
+            />
+            <input
+              type="number"
+              class="prize-value"
+              placeholder="Value (e.g., 50)"
+              min="0"
+              step="0.01"
+              required
+            />
+            <input
+              type="number"
+              class="prize-probability"
+              placeholder="Probability (e.g., 90)"
+              min="0"
+              step="0.01"
+              required
+            />
+            <button type="button" class="remove-prize">Remove</button>
+          </div>
+        </div>
+        <button type="button" id="addPrize">Add Prize</button>
+
+        <div id="errorMessage" class="error"></div>
+        <button type="submit">Save Configuration</button>
+      </form>
+    </div>
+
+    <script>
+      // Function to add a new prize item
+      function addPrizeItem(name = "", value = "", probability = "") {
+        const prizesContainer = document.getElementById("prizesContainer");
+        const prizeItem = document.createElement("div");
+        prizeItem.className = "prize-item";
+        prizeItem.innerHTML = `
+          <input type="text" class="prize-name" placeholder="Prize name (e.g., 50$)" value="${name}" required>
+          <input type="number" class="prize-value" placeholder="Value (e.g., 50)" min="0" step="0.01" value="${value}" required>
+          <input type="number" class="prize-probability" placeholder="Probability (e.g., 90)" min="0" step="0.01" value="${probability}" required>
+          <button type="button" class="remove-prize">Remove</button>
+        `;
+        prizesContainer.appendChild(prizeItem);
+
+        // Add event listener to remove button
+        prizeItem
+          .querySelector(".remove-prize")
+          .addEventListener("click", function () {
+            prizesContainer.removeChild(prizeItem);
+          });
+      }
+
+      // Load existing config from localStorage
+      const savedConfig = localStorage.getItem("spinAndWinConfig");
+      if (savedConfig) {
+        try {
+          const config = JSON.parse(savedConfig);
+          document.getElementById("gameName").value = config.gameName || "";
+          document.getElementById("sliceNumber").value =
+            config.sliceNumber || "";
+          document.getElementById("spinDuration").value =
+            config.spinDuration || "";
+
+          // Clear existing prize items except the first one
+          const prizesContainer = document.getElementById("prizesContainer");
+          prizesContainer.innerHTML = "";
+
+          // Add prize items from saved config
+          if (config.wheelPrizes && Array.isArray(config.wheelPrizes)) {
+            config.wheelPrizes.forEach((prize) => {
+              addPrizeItem(
+                prize.name || "",
+                prize.value || "",
+                prize.probability || ""
+              );
+            });
+          }
+          // If no prizes, add one empty
+          if (!config.wheelPrizes || config.wheelPrizes.length === 0) {
+            addPrizeItem();
+          }
+        } catch (e) {
+          console.error("Error loading saved config:", e);
+          addPrizeItem(); // Add one empty if error
+        }
+      } else {
+        // No saved config, save defaults and load them
+        const defaultConfig = {
+          gameName: "Spin And Win",
+          sliceNumber: 40,
+          spinDuration: 8,
+          wheelPrizes: [
+            { name: "50$", probability: 90, value: 50 },
+            { name: "10$", probability: 1, value: 10 },
+            { name: "10$", probability: 1, value: 10 },
+            { name: "10$", probability: 1, value: 10 },
+            { name: "10$", probability: 1, value: 10 },
+            { name: "20$", probability: 10, value: 20 },
+            { name: "20$", probability: 10, value: 20 },
+          ],
+        };
+        localStorage.setItem("spinAndWinConfig", JSON.stringify(defaultConfig));
+        // Now load the defaults
+        document.getElementById("gameName").value = defaultConfig.gameName;
+        document.getElementById("sliceNumber").value =
+          defaultConfig.sliceNumber;
+        document.getElementById("spinDuration").value =
+          defaultConfig.spinDuration;
+        // Clear existing prize items
+        const prizesContainer = document.getElementById("prizesContainer");
+        prizesContainer.innerHTML = "";
+        // Add prize items from defaults
+        defaultConfig.wheelPrizes.forEach((prize) => {
+          addPrizeItem(prize.name, prize.value, prize.probability);
+        });
+      }
+
+      // Add prize button event
+      document
+        .getElementById("addPrize")
+        .addEventListener("click", function () {
+          addPrizeItem();
+        });
+
+      document
+        .getElementById("configForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const errorMessage = document.getElementById("errorMessage");
+          errorMessage.textContent = "";
+
+          const gameName = document.getElementById("gameName").value.trim();
+          const sliceNumber = parseInt(
+            document.getElementById("sliceNumber").value
+          );
+          const spinDuration = parseFloat(
+            document.getElementById("spinDuration").value
+          );
+
+          if (!gameName) {
+            errorMessage.textContent = "Game Name is required.";
+            return;
+          }
+          if (isNaN(sliceNumber) || sliceNumber < 1) {
+            errorMessage.textContent =
+              "Slice Number must be a positive integer.";
+            return;
+          }
+          if (isNaN(spinDuration) || spinDuration <= 0) {
+            errorMessage.textContent =
+              "Spin Duration must be a positive number.";
+            return;
+          }
+
+          // Collect wheel prizes from inputs
+          const prizeItems = document.querySelectorAll(".prize-item");
+          const wheelPrizes = [];
+          for (let item of prizeItems) {
+            const name = item.querySelector(".prize-name").value.trim();
+            const value = parseFloat(item.querySelector(".prize-value").value);
+            const probability = parseFloat(
+              item.querySelector(".prize-probability").value
+            );
+
+            if (!name) {
+              errorMessage.textContent = "All prize names are required.";
+              return;
+            }
+            if (isNaN(value) || value < 0) {
+              errorMessage.textContent =
+                "All prize values must be non-negative numbers.";
+              return;
+            }
+            if (isNaN(probability) || probability < 0) {
+              errorMessage.textContent =
+                "All prize probabilities must be non-negative numbers.";
+              return;
+            }
+
+            wheelPrizes.push({ name, value, probability });
+          }
+
+          if (wheelPrizes.length === 0) {
+            errorMessage.textContent = "At least one prize is required.";
+            return;
+          }
+
+          const config = {
+            gameName,
+            sliceNumber,
+            spinDuration,
+            wheelPrizes,
+          };
+
+          localStorage.setItem("spinAndWinConfig", JSON.stringify(config));
+          alert("Configuration saved successfully!");
+        });
+      //
+    </script>
+  </body>
+</html>
