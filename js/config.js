@@ -4,16 +4,6 @@ let sliceNumber;
 let spinDuration;
 let wheelPrizes;
 
-const defaultWheelPrizes = [
-  { name: "50$", probability: 90, value: 50 },
-  { name: "10$", probability: 1, value: 10 },
-  { name: "10$", probability: 1, value: 10 },
-  { name: "10$", probability: 1, value: 10 },
-  { name: "10$", probability: 1, value: 10 },
-  { name: "20$", probability: 10, value: 20 },
-  { name: "20$", probability: 10, value: 20 },
-];
-
 const savedConfig = localStorage.getItem("spinAndWinConfig");
 if (savedConfig) {
   const config = JSON.parse(savedConfig);
@@ -21,9 +11,21 @@ if (savedConfig) {
   sliceNumber = config.sliceNumber;
   spinDuration = config.spinDuration;
   wheelPrizes = config.wheelPrizes;
+} else {
+  gameName = "Spin And Win";
+  sliceNumber = 40;
+  spinDuration = 8;
+  wheelPrizes = [
+    { name: "50$", probability: 90, value: 50 },
+    { name: "10$", probability: 1, value: 10 },
+    { name: "10$", probability: 1, value: 10 },
+    { name: "10$", probability: 1, value: 10 },
+    { name: "10$", probability: 1, value: 10 },
+    { name: "20$", probability: 10, value: 20 },
+    { name: "20$", probability: 10, value: 20 },
+  ];
 }
 
-wheelPrizes = wheelPrizes || defaultWheelPrizes;
 //  0xffd700, // classic gold
 //     0xffc107, // bright gold
 //     0xffb300, // amber gold
